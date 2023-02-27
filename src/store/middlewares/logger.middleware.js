@@ -1,5 +1,4 @@
-const LoggerMiddleWare = (store) => (next) => (action) => {
-  console.log(store);
+const LoggerMiddleWare = () => (next) => (action) => {
   const result = next(action);
   return result;
 };

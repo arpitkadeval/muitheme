@@ -46,11 +46,17 @@ import {
   setTransparentSidenav,
   setWhiteSidenav,
 } from "context";
+import { useDispatch } from "react-redux";
+import { logout } from "store/auth/authAction";
 
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
   const location = useLocation();
+  const dispatchData = useDispatch();
+
+  const token = localStorage.getItem("token") || "";
+
   const collapseName = location.pathname.replace("/", "");
 
   let textColor = "white";
@@ -71,7 +77,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       setWhiteSidenav(dispatch, window.innerWidth < 1200 ? false : whiteSidenav);
     }
 
-    /** 
+    /**
      The event listener that's calling the handleMiniSidenav function when resizing the window.
     */
     window.addEventListener("resize", handleMiniSidenav);
@@ -139,7 +145,9 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
     return returnValue;
   });
-
+  const logoutUser = () => {
+    dispatchData(logout());
+  };
   return (
     <SidenavRoot
       {...rest}
@@ -179,19 +187,20 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         }
       />
       <List>{renderRoutes}</List>
-      <MDBox p={2} mt="auto">
-        <MDButton
-          component="a"
-          href="https://www.creative-tim.com/product/material-dashboard-pro-react"
-          target="_blank"
-          rel="noreferrer"
-          variant="gradient"
-          color={sidenavColor}
-          fullWidth
-        >
-          upgrade to pro
-        </MDButton>
-      </MDBox>
+      {token && (
+        <MDBox p={2} mt="auto">
+          <MDButton
+            component="a"
+            rel="noreferrer"
+            variant="gradient"
+            color={sidenavColor}
+            fullWidth
+            onClick={(e) => logoutUser(e)}
+          >
+            Logout
+          </MDButton>
+        </MDBox>
+      )}
     </SidenavRoot>
   );
 }

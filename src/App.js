@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { Provider } from "react-redux";
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -36,10 +35,11 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 // Images
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
-import configureStore from "./store";
+import { useSelector } from "react-redux";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
+  const auth = useSelector((state) => state?.authReducer);
   const {
     miniSidenav,
     direction,
@@ -50,12 +50,13 @@ export default function App() {
     whiteSidenav,
     darkMode,
   } = controller;
-  const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const [rtlCache, setRtlCache] = useState(null);
-  const store = configureStore();
-  const { pathname } = useLocation();
 
+  const [onMouseEnter, setOnMouseEnter] = useState(false);
+  const [routeItem, setRouteItem] = useState(routes.default);
+  const [rtlCache, setRtlCache] = useState(null);
+  const { pathname } = useLocation();
   // Cache for the rtl
+
   useMemo(() => {
     const cacheRtl = createCache({
       key: "rtl",
@@ -64,7 +65,7 @@ export default function App() {
 
     setRtlCache(cacheRtl);
   }, []);
-
+  console.log(auth);
   // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
@@ -94,6 +95,15 @@ export default function App() {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
+  useEffect(() => {
+    if (auth?.data?.type === "admin") {
+      setRouteItem(routes.admin);
+    } else if (auth?.data?.type === "user") {
+      setRouteItem(routes.user);
+    } else {
+      setRouteItem(routes.default);
+    }
+  }, [auth]);
 
   const getRoutes = (allRoutes) =>
     allRoutes.map((route) => {
@@ -135,13 +145,13 @@ export default function App() {
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        {layout === "dashboard" && routeItem && (
           <>
             <Sidenav
               color={sidenavColor}
               brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
               brandName="Material Dashboard 2"
-              routes={routes}
+              routes={routeItem}
               onMouseEnter={handleOnMouseEnter}
               onMouseLeave={handleOnMouseLeave}
             />
@@ -150,24 +160,22 @@ export default function App() {
           </>
         )}
         {layout === "vr" && <Configurator />}
-        <Provider store={store}>
-          <Routes>
-            {getRoutes(routes)}
-            <Route path="*" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </Provider>
+        <Routes>
+          {routeItem ? getRoutes(routeItem) : null}
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
       </ThemeProvider>
     </CacheProvider>
   ) : (
     <ThemeProvider theme={darkMode ? themeDark : theme}>
       <CssBaseline />
-      {layout === "dashboard" && (
+      {layout === "dashboard" && routeItem && (
         <>
           <Sidenav
             color={sidenavColor}
             brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
             brandName="Material Dashboard 2"
-            routes={routes}
+            routes={routeItem}
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
           />
@@ -176,12 +184,10 @@ export default function App() {
         </>
       )}
       {layout === "vr" && <Configurator />}
-      <Provider store={store}>
-        <Routes>
-          {getRoutes(routes)}
-          <Route path="*" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </Provider>
+      <Routes>
+        {getRoutes(routes?.default)}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+      </Routes>
     </ThemeProvider>
   );
 }

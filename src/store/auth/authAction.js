@@ -18,6 +18,14 @@ export const login = (data) => async (dispatch) =>
       method: "POST",
       url: `${API_URL.auth.login}`,
       data,
+      onUploadProgress: (progressEvent) => {
+        console.log(progressEvent);
+        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        dispatch({
+          type: LOADING,
+          payload: percentage,
+        });
+      },
     })
       .then((response) => {
         resolve(response.data);

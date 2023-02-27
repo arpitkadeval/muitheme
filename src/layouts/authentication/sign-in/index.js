@@ -26,12 +26,13 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "store/auth/authAction";
 
 function Basic() {
   const [rememberMe, setRememberMe] = useState(false);
-  const { auth } = useSelector((state) => state);
-  // const dispatch = useDispatch();
+  const auth = useSelector((state) => state?.authReducer);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
@@ -44,16 +45,17 @@ function Basic() {
     }),
     onSubmit: (values) => {
       console.log(values);
-      // dispatch(login(values))
+      dispatch(login(values));
     },
   });
 
   const isLoggingIn = false;
   useEffect(() => {
-    if (auth.token && auth.data?.type === "admin") {
-      navigate("admin/dashboard");
-    } else if (auth.token && auth.data?.type === "user") {
-      navigate("user/dashboard");
+    console.log(auth.loading);
+    if (auth?.token && auth?.data?.type === "admin") {
+      navigate("/dashboard");
+    } else if (auth?.token && auth?.data?.type === "user") {
+      navigate("/dashboard");
     }
   }, [auth]);
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
